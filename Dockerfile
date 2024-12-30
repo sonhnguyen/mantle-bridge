@@ -1,19 +1,34 @@
-# Use the official Node.js image.
-FROM node:14
+# Stage 1: Build stage
+FROM node:20-alpine AS builder
 
-# Create app directory
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Install app dependencies
+# Copy package files
 COPY package*.json ./
 
-RUN npm install
+# Install dependencies
+RUN npm ci
 
-# Bundle app source
+# Copy source code
 COPY . .
 
-# Build the TypeScript code
+# Build the application
 RUN npm run build
 
-# Command to run the app
-CMD [ "node", "dist/index.js" ]
+# Stage 2: Production stage
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy only production dependencies and built files
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Command to run the application
+CMD ["node", "dist/server.js"]

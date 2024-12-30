@@ -1,13 +1,12 @@
 import dotenv from 'dotenv';
+dotenv.config();
+
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import express, { Request, Response, NextFunction } from 'express';
 import ApplicationError from './errors/application-error';
 import logger from './logger';
 import routes from './routes';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 
@@ -34,8 +33,9 @@ app.use(
     }
 
     res.status(err.status || 500).json({
+      error: err,
       message: err.message,
-      ...(isDevelopment && { stack: err.stack }), // Include stack trace in development mode
+      ...(isDevelopment && { stack: err.stack }),
     });
   }
 );
